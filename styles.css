@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disiplin ve Rutin Takip Uygulaması</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #e84393;
+            --accent-color: #9b59b6;
+            --dark-blue: #2c3e50;
+            --black: #34495e;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --routine-color: #dfe6e9;
+            --completed-color: #2ecc71;
+            --delete-color: #ffffff;
+            --sidebar-width: 300px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 90vh;
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .app-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .date-display {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        /* Sol Sidebar - Rutinler */
+        .routines-sidebar {
+            background-color: var(--card-color);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            grid-row: 2 / 4;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .routines-sidebar h2 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .routines-sidebar h2 i {
+            margin-right: 10px;
+        }
+        
+        .routine-list {
+            list-style-type: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 50vh;
+        }
+        
+        .routine-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: var(--routine-color);
+            border-radius: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .routine-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .routine-item input[type="checkbox"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .routine-text {
+            flex-grow: 1;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .routine-item.completed .routine-text {
+            text-decoration: line-through;
+            color: #777;
+        }
+        
+        .routine-delete {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+            margin-left: 10px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .routine-delete:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+        
+        .add-routine-form {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .add-routine-form h3 {
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .add-routine-form h3 i {
+            margin-right: 8px;
+        }
+        
+        /* Ana İçerik - Aktivite ve Takvimler */
+        .main-content {
+            background-color: var(--card-color);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            grid-row: 2 / 3;
+        }
+        
+        .main-content h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .main-content h2 i {
+            margin-right: 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        input, select, button, textarea {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        button:hover {
+            background-color: #fd79a8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Takvim Bölümü */
+        .calendar-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .calendar-container {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .calendar-container h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .calendar-day {
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 5px;
+            position: relative;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .calendar-day.empty {
+            background-color: #f9f9f9;
+            border: none;
+            cursor: default;
+        }
+        
+        .calendar-day.has-data {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .calendar-day.has-routines {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .calendar-day.has-both {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+        }
+        
+        .day-details {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            display: none;
+            z-index: 10;
+        }
+        
+        .calendar-day:hover .day-details {
+            display: block;
+        }
+        
+        .day-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background-color: var(--secondary-color);
+            border-radius: 0 0 5px 5px;
+        }
+        
+        /* Aktivite Listesi */
+        .activity-list {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .activity-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .activity-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .activity-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .activity-delete {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            padding: 3px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .activity-delete:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Alt Bölüm - İstatistikler */
+        .stats-section {
+            grid-column: 1 / -1;
+            background-color: var(--card-color);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-top: 10px;
+        }
+        
+        .stats-section h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stats-section h2 i {
+            margin-right: 10px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-unit {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .routine-stats {
+            margin-top: 30px;
+        }
+        
+        .routine-stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border-color);
+            align-items: center;
+        }
+        
+        .routine-stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .modal-btn.confirm {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+        }
+        
+        .modal-btn.cancel {
+            background-color: #bdc3c7;
+            color: white;
+            border: none;
+        }
+        
+        /* Aktivite Detay Modal */
+        .activity-details {
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .activity-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        
+        .activity-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Rutin Detay Modal */
+        .routine-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        
+        .routine-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            
+            .routines-sidebar {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3;
+            }
+            
+            .main-content {
+                grid-column: 1 / 2;
+                grid-row: 3 / 4;
+            }
+            
+            .stats-section {
+                grid-column: 1 / 2;
+                grid-row: 4 / 5;
+            }
+            
+            .calendar-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input, select, button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1><i class="fas fa-tasks"></i> Disiplin ve Rutin Takip Uygulaması</h1>
+            <p class="app-description">Günlük rutinlerinizi takip edin, hedeflerinize ulaşın</p>
+            <div class="date-display" id="current-date">20 Eylül 2023</div>
+        </header>
+        
+        <!-- Sol Bölüm - Rutinler -->
+        <div class="routines-sidebar">
+            <h2><i class="fas fa-list-check"></i> Günlük Rutinler</h2>
+            <ul class="routine-list" id="routine-list">
+                <!-- Rutinler buraya dinamik olarak eklenecek -->
+            </ul>
+            
+            <div class="add-routine-form">
+                <h3><i class="fas fa-plus-circle"></i> Yeni Rutin Ekle</h3>
+                <div class="input-group">
+                    <input type="text" id="routine-name" placeholder="Rutin adı">
+                    <button id="add-routine"><i class="fas fa-plus"></i> Ekle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ana İçerik - Aktivite ve Takvimler -->
+        <div class="main-content">
+            <h2><i class="fas fa-clock"></i> Aktivite ve Dakika Takibi</h2>
+            <div class="input-group">
+                <input type="text" id="activity-name" placeholder="Aktivite adı">
+                <input type="number" id="activity-minutes" placeholder="Dakika" min="1">
+                <select id="activity-color">
+                    <option value="#3498db">Mavi</option>
+                    <option value="#e84393">Pembe</option>
+                    <option value="#9b59b6">Mor</option>
+                    <option value="#2c3e50">Lacivert</option>
+                    <option value="#34495e">Siyah</option>
+                </select>
+                <button id="add-activity" class="btn-primary"><i class="fas fa-plus"></i> Aktivite Ekle</button>
+            </div>
+            
+            <div class="calendar-section">
+                <div class="calendar-container">
+                    <h3>Rutin Takvimi</h3>
+                    <div class="calendar-header">
+                        <button id="prev-month-routine"><i class="fas fa-chevron-left"></i></button>
+                        <h4 id="current-month-routine">Eylül 2023</h4>
+                        <button id="next-month-routine"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid" id="routine-calendar">
+                        <!-- Rutin takvimi buraya eklenecek -->
+                    </div>
+                </div>
+                
+                <div class="calendar-container">
+                    <h3>Aktivite Takvimi</h3>
+                    <div class="calendar-header">
+                        <button id="prev-month-activity"><i class="fas fa-chevron-left"></i></button>
+                        <h4 id="current-month-activity">Eylül 2023</h4>
+                        <button id="next-month-activity"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid" id="activity-calendar">
+                        <!-- Aktivite takvimi buraya eklenecek -->
+                    </div>
+                    
+                    <div class="activity-list" id="activity-list">
+                        <!-- Aktivite listesi buraya eklenecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alt Bölüm - İstatistikler -->
+        <div class="stats-section">
+            <h2><i class="fas fa-chart-line"></i> İstatistikler ve Performans</h2>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Bugünkü Aktivite</h3>
+                    <div class="stat-value" id="today-activity">0</div>
+                    <div class="stat-unit">dakika</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Tamamlanan Rutinler</h3>
+                    <div class="stat-value" id="completed-routines">0</div>
+                    <div class="stat-unit">rutin</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Bu Ayki Aktivite</h3>
+                    <div class="stat-value" id="month-activity">0</div>
+                    <div class="stat-unit">dakika</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Toplam Süre</h3>
+                    <div class="stat-value" id="total-time">0</div>
+                    <div class="stat-unit">dakika</div>
+                </div>
+            </div>
+            
+            <div class="routine-stats">
+                <h3>Rutin ve Aktivite İstatistikleri</h3>
+                <div id="routine-stats-container">
+                    <!-- İstatistikler buraya eklenecek -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Silme Onay Modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="delete-title">Öğeyi Sil</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p id="delete-message">Bu öğeyi silmek istediğinizden emin misiniz?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancel-delete">İptal</button>
+                <button class="modal-btn confirm" id="confirm-delete">Sil</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aktivite Detay Modal -->
+    <div class="modal" id="activity-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="activity-detail-title">Aktivite Detayları</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="activity-details" id="activity-detail-content">
+                <!-- Aktivite detayları buraya eklenecek -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rutin Detay Modal -->
+    <div class="modal" id="routine-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="routine-detail-title">Rutin Detayları</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="activity-details" id="routine-detail-content">
+                <!-- Rutin detayları buraya eklenecek -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        İşlem başarılı!
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elementleri
+            const routineNameInput = document.getElementById('routine-name');
+            const addRoutineBtn = document.getElementById('add-routine');
+            const routineList = document.getElementById('routine-list');
+            const activityNameInput = document.getElementById('activity-name');
+            const activityMinutesInput = document.getElementById('activity-minutes');
+            const activityColorInput = document.getElementById('activity-color');
+            const addActivityBtn = document.getElementById('add-activity');
+            const currentDateEl = document.getElementById('current-date');
+            const todayActivityEl = document.getElementById('today-activity');
+            const completedRoutinesEl = document.getElementById('completed-routines');
+            const monthActivityEl = document.getElementById('month-activity');
+            const totalTimeEl = document.getElementById('total-time');
+            const routineStatsContainer = document.getElementById('routine-stats-container');
+            const activityList = document.getElementById('activity-list');
+            const notification = document.getElementById('notification');
+            
+            // Takvim elementleri
+            const routineCalendar = document.getElementById('routine-calendar');
+            const activityCalendar = document.getElementById('activity-calendar');
+            const currentMonthRoutineEl = document.getElementById('current-month-routine');
+            const currentMonthActivityEl = document.getElementById('current-month-activity');
+            const prevMonthRoutineBtn = document.getElementById('prev-month-routine');
+            const nextMonthRoutineBtn = document.getElementById('next-month-routine');
+            const prevMonthActivityBtn = document.getElementById('prev-month-activity');
+            const nextMonthActivityBtn = document.getElementById('next-month-activity');
+            
+            // Modal elementleri
+            const deleteModal = document.getElementById('delete-modal');
+            const deleteTitle = document.getElementById('delete-title');
+            const deleteMessage = document.getElementById('delete-message');
+            const confirmDeleteBtn = document.getElementById('confirm-delete');
+            const cancelDeleteBtn = document.getElementById('cancel-delete');
+            const closeModalBtns = document.querySelectorAll('.close-modal');
+            const activityDetailModal = document.getElementById('activity-detail-modal');
+            const activityDetailTitle = document.getElementById('activity-detail-title');
+            const activityDetailContent = document.getElementById('activity-detail-content');
+            const routineDetailModal = document.getElementById('routine-detail-modal');
+            const routineDetailTitle = document.getElementById('routine-detail-title');
+            const routineDetailContent = document.getElementById('routine-detail-content');
+            
+            // Güncel tarihi göster
+            const today = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            currentDateEl.textContent = today.toLocaleDateString('tr-TR', options);
+            
+            // Takvim için geçerli ay ve yıl
+            let calendarYear = today.getFullYear();
+            let calendarMonth = today.getMonth();
+            
+            // Veri yapıları
+            let routines = JSON.parse(localStorage.getItem('dailyRoutines')) || [];
+            let activities = JSON.parse(localStorage.getItem('dailyActivities')) || [];
+            let routineCompletions = JSON.parse(localStorage.getItem('routineCompletions')) || {};
+            
+            // Silinecek öğe bilgileri
+            let itemToDelete = null;
+            let deleteType = null; // 'routine' veya 'activity'
+            
+            // Yeni rutin ekleme
+            addRoutineBtn.addEventListener('click', function() {
+                const name = routineNameInput.value.trim();
+                
+                if (name) {
+                    const routine = {
+                        id: Date.now(),
+                        name: name,
+                        addedDate: new Date().toISOString()
+                    };
+                    
+                    routines.push(routine);
+                    saveData();
+                    renderRoutines();
+                    
+                    // Input alanını temizle
+                    routineNameInput.value = '';
+                    
+                    // Bildirim göster
+                    showNotification('Rutin başarıyla eklendi!');
+                } else {
+                    alert('Lütfen bir rutin adı girin.');
+                }
+            });
+            
+            // Yeni aktivite ekleme
+            addActivityBtn.addEventListener('click', function() {
+                const name = activityNameInput.value.trim();
+                const minutes = parseInt(activityMinutesInput.value);
+                const color = activityColorInput.value;
+                
+                if (name && minutes > 0) {
+                    const activity = {
+                        id: Date.now(),
+                        name: name,
+                        minutes: minutes,
+                        color: color,
+                        date: new Date().toISOString()
+                    };
+                    
+                    activities.push(activity);
+                    saveData();
+                    updateStats();
+                    renderActivityCalendar();
+                    renderActivityList();
+                    
+                    // Input alanlarını temizle
+                    activityNameInput.value = '';
+                    activityMinutesInput.value = '';
+                    
+                    // Bildirim göster
+                    showNotification('Aktivite başarıyla eklendi!');
+                } else {
+                    alert('Lütfen geçerli bir aktivite adı ve dakika girin.');
+                }
+            });
+            
+            // Takvim ay değiştirme
+            prevMonthRoutineBtn.addEventListener('click', function() {
+                calendarMonth--;
+                if (calendarMonth < 0) {
+                    calendarMonth = 11;
+                    calendarYear--;
+                }
+                renderRoutineCalendar();
+            });
+            
+            nextMonthRoutineBtn.addEventListener('click', function() {
+                calendarMonth++;
+                if (calendarMonth > 11) {
+                    calendarMonth = 0;
+                    calendarYear++;
+                }
+                renderRoutineCalendar();
+            });
+            
+            prevMonthActivityBtn.addEventListener('click', function() {
+                calendarMonth--;
+                if (calendarMonth < 0) {
+                    calendarMonth = 11;
+                    calendarYear--;
+                }
+                renderActivityCalendar();
+            });
+            
+            nextMonthActivityBtn.addEventListener('click', function() {
+                calendarMonth++;
+                if (calendarMonth > 11) {
+                    calendarMonth = 0;
+                    calendarYear++;
+                }
+                renderActivityCalendar();
+            });
+            
+            // Rutin silme işlemi
+            function setupDeleteHandler(deleteBtn, routine, type) {
+                deleteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Olayın üst elementlere yayılmasını engelle
+                    itemToDelete = routine;
+                    deleteType = type;
+                    
+                    if (type === 'routine') {
+                        deleteTitle.textContent = 'Rutini Sil';
+                        deleteMessage.textContent = `"${routine.name}" rutinini silmek istediğinizden emin misiniz?`;
+                    } else {
+                        deleteTitle.textContent = 'Aktiviteyi Sil';
+                        deleteMessage.textContent = `"${routine.name}" aktivitesini silmek istediğinizden emin misiniz?`;
+                    }
+                    
+                    deleteModal.style.display = 'flex';
+                });
+            }
+            
+            // Silme işlemini onayla
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (itemToDelete && deleteType) {
+                    if (deleteType === 'routine') {
+                        // Rutini listeden kaldır
+                        routines = routines.filter(r => r.id !== itemToDelete.id);
+                        
+                        // Rutinin tamamlama verilerini temizle
+                        for (const date in routineCompletions) {
+                            routineCompletions[date] = routineCompletions[date].filter(id => id !== itemToDelete.id);
+                            if (routineCompletions[date].length === 0) {
+                                delete routineCompletions[date];
+                            }
+                        }
+                        
+                        saveData();
+                        renderRoutines();
+                        renderRoutineCalendar();
+                        showNotification('Rutin başarıyla silindi!');
+                    } else if (deleteType === 'activity') {
+                        // Aktiviteyi listeden kaldır
+                        activities = activities.filter(a => a.id !== itemToDelete.id);
+                        
+                        saveData();
+                        renderActivityCalendar();
+                        renderActivityList();
+                        showNotification('Aktivite başarıyla silindi!');
+                    }
+                    
+                    updateStats();
+                    closeDeleteModal();
+                }
+            });
+            
+            // Silme işlemini iptal et
+            cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    closeDeleteModal();
+                    activityDetailModal.style.display = 'none';
+                    routineDetailModal.style.display = 'none';
+                });
+            });
+            
+            // Modal dışına tıklanınca kapat
+            window.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    closeDeleteModal();
+                }
+                if (e.target === activityDetailModal) {
+                    activityDetailModal.style.display = 'none';
+                }
+                if (e.target === routineDetailModal) {
+                    routineDetailModal.style.display = 'none';
+                }
+            });
+            
+            function closeDeleteModal() {
+                deleteModal.style.display = 'none';
+                itemToDelete = null;
+                deleteType = null;
+            }
+            
+            // Aktivite detaylarını göster
+            function showActivityDetails(date) {
+                const dayActivities = activities.filter(a => a.date.startsWith(date));
+                
+                if (dayActivities.length === 0) {
+                    activityDetailTitle.textContent = `${date} - Aktivite Yok`;
+                    activityDetailContent.innerHTML = '<p>Bu tarihte herhangi bir aktivite bulunamadı.</p>';
+                } else {
+                    activityDetailTitle.textContent = `${date} Aktivite Detayları`;
+                    
+                    let detailsHTML = '';
+                    let totalMinutes = 0;
+                    
+                    dayActivities.forEach(activity => {
+                        totalMinutes += activity.minutes;
+                        detailsHTML += `
+                            <div class="activity-detail-item">
+                                <div>
+                                    <span class="activity-color" style="background-color: ${activity.color}"></span>
+                                    ${activity.name}
+                                </div>
+                                <div>${activity.minutes} dakika</div>
+                            </div>
+                        `;
+                    });
+                    
+                    detailsHTML += `
+                        <div class="activity-detail-item" style="font-weight: bold; border-top: 2px solid #eee;">
+                            <div>Toplam</div>
+                            <div>${totalMinutes} dakika</div>
+                        </div>
+                    `;
+                    
+                    activityDetailContent.innerHTML = detailsHTML;
+                }
+                
+                activityDetailModal.style.display = 'flex';
+            }
+            
+            // Rutin detaylarını göster
+            function showRoutineDetails(date) {
+                const completions = routineCompletions[date] || [];
+                const completedRoutines = routines.filter(r => completions.includes(r.id));
+                
+                if (completedRoutines.length === 0) {
+                    routineDetailTitle.textContent = `${date} - Tamamlanmış Rutin Yok`;
+                    routineDetailContent.innerHTML = '<p>Bu tarihte herhangi bir rutin tamamlanmamış.</p>';
+                } else {
+                    routineDetailTitle.textContent = `${date} Tamamlanmış Rutinler`;
+                    
+                    let detailsHTML = '';
+                    
+                    completedRoutines.forEach(routine => {
+                        detailsHTML += `
+                            <div class="routine-detail-item">
+                                <div>${routine.name}</div>
+                                <div><i class="fas fa-check" style="color: var(--completed-color);"></i></div>
+                            </div>
+                        `;
+                    });
+                    
+                    detailsHTML += `
+                        <div class="routine-detail-item" style="font-weight: bold; border-top: 2px solid #eee;">
+                            <div>Toplam Tamamlanan</div>
+                            <div>${completedRoutines.length} rutin</div>
+                        </div>
+                    `;
+                    
+                    routineDetailContent.innerHTML = detailsHTML;
+                }
+                
+                routineDetailModal.style.display = 'flex';
+            }
+            
+            // Bildirim göster
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Veriyi localStorage'a kaydet
+            function saveData() {
+                localStorage.setItem('dailyRoutines', JSON.stringify(routines));
+                localStorage.setItem('dailyActivities', JSON.stringify(activities));
+                localStorage.setItem('routineCompletions', JSON.stringify(routineCompletions));
+            }
+            
+            // Rutinleri listele
+            function renderRoutines() {
+                routineList.innerHTML = '';
+                
+                if (routines.length === 0) {
+                    routineList.innerHTML = '<p class="no-routines">Henüz rutin eklenmemiş. Yeni rutin ekleyin.</p>';
+                    return;
+                }
+                
+                // Bugünün tarihini al (sadece tarih kısmı)
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                
+                routines.forEach(routine => {
+                    const li = document.createElement('li');
+                    li.className = 'routine-item';
+                    
+                    // Bugün bu rutin tamamlandı mı?
+                    const isCompleted = routineCompletions[todayStr] && 
+                                       routineCompletions[todayStr].includes(routine.id);
+                    
+                    if (isCompleted) {
+                        li.classList.add('completed');
+                    }
+                    
+                    li.innerHTML = `
+                        <input type="checkbox" ${isCompleted ? 'checked' : ''}>
+                        <span class="routine-text">${routine.name}</span>
+                        <button class="routine-delete"><i class="fas fa-trash"></i></button>
+                    `;
+                    
+                    const checkbox = li.querySelector('input');
+                    const deleteBtn = li.querySelector('.routine-delete');
+                    
+                    checkbox.addEventListener('change', function() {
+                        // Bugünün tarihini al (sadece tarih kısmı)
+                        const today = new Date();
+                        const todayStr = today.toISOString().split('T')[0];
+                        
+                        if (!routineCompletions[todayStr]) {
+                            routineCompletions[todayStr] = [];
+                        }
+                        
+                        if (this.checked) {
+                            // Rutini tamamlandı olarak işaretle
+                            if (!routineCompletions[todayStr].includes(routine.id)) {
+                                routineCompletions[todayStr].push(routine.id);
+                            }
+                            li.classList.add('completed');
+                            showNotification('Tebrikler! Rutini tamamladınız! 🎉');
+                        } else {
+                            // Rutini tamamlanmamış olarak işaretle
+                            routineCompletions[todayStr] = routineCompletions[todayStr].filter(id => id !== routine.id);
+                            li.classList.remove('completed');
+                        }
+                        
+                        saveData();
+                        updateStats();
+                        renderRoutineCalendar();
+                    });
+                    
+                    // Silme butonuna tıklama olayını ekle
+                    setupDeleteHandler(deleteBtn, routine, 'routine');
+                    
+                    routineList.appendChild(li);
+                });
+            }
+            
+            // Aktivite listesini oluştur
+            function renderActivityList() {
+                activityList.innerHTML = '';
+                
+                // Bugünün tarihini al (sadece tarih kısmı)
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                
+                const todayActivities = activities.filter(a => a.date.startsWith(todayStr));
+                
+                if (todayActivities.length === 0) {
+                    activityList.innerHTML = '<p>Bugün eklenmiş aktivite yok.</p>';
+                    return;
+                }
+                
+                todayActivities.forEach(activity => {
+                    const item = document.createElement('div');
+                    item.className = 'activity-item';
+                    
+                    item.innerHTML = `
+                        <div class="activity-info">
+                            <span class="activity-color" style="background-color: ${activity.color}"></span>
+                            <span>${activity.name} - ${activity.minutes} dakika</span>
+                        </div>
+                        <button class="activity-delete"><i class="fas fa-trash"></i></button>
+                    `;
+                    
+                    const deleteBtn = item.querySelector('.activity-delete');
+                    setupDeleteHandler(deleteBtn, activity, 'activity');
+                    
+                    activityList.appendChild(item);
+                });
+            }
+            
+            // Rutin takvimini oluştur
+            function renderRoutineCalendar() {
+                const monthNames = [
+                    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+                ];
+                
+                currentMonthRoutineEl.textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
+                
+                // Takvim başlıkları (gün isimleri)
+                const dayNames = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+                let calendarHTML = '';
+                
+                // Gün isimlerini ekle
+                dayNames.forEach(day => {
+                    calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+                });
+                
+                // Ayın ilk günü ve son günü
+                const firstDay = new Date(calendarYear, calendarMonth, 1);
+                const lastDay = new Date(calendarYear, calendarMonth + 1, 0);
+                
+                // İlk günden önceki boşlukları ekle
+                let dayOfWeek = firstDay.getDay();
+                // Pazartesi tabanlı takvim için düzeltme (Pazar = 0, Pazartesi = 1, ...)
+                dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                
+                for (let i = 0; i < dayOfWeek; i++) {
+                    calendarHTML += `<div class="calendar-day empty"></div>`;
+                }
+                
+                // Günleri ekle
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const completions = routineCompletions[dateStr] || [];
+                    const completionRate = routines.length > 0 ? (completions.length / routines.length) * 100 : 0;
+                    
+                    const isToday = new Date().getDate() === day && 
+                                   new Date().getMonth() === calendarMonth && 
+                                   new Date().getFullYear() === calendarYear;
+                    
+                    let dayClass = 'calendar-day';
+                    if (completions.length > 0) dayClass += ' has-data';
+                    if (isToday) dayClass += ' today';
+                    
+                    calendarHTML += `
+                        <div class="${dayClass}" data-date="${dateStr}">
+                            ${day}
+                            <div class="day-progress" style="width: ${completionRate}%"></div>
+                            <div class="day-details">
+                                ${completions.length}/${routines.length} rutin tamamlandı<br>
+                                %${Math.round(completionRate)} tamamlama
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                routineCalendar.innerHTML = calendarHTML;
+                
+                // Rutin günlerine tıklama olayı ekle
+                document.querySelectorAll('#routine-calendar .calendar-day[data-date]').forEach(dayElement => {
+                    dayElement.addEventListener('click', function() {
+                        const date = this.getAttribute('data-date');
+                        showRoutineDetails(date);
+                    });
+                });
+            }
+            
+            // Aktivite takvimini oluştur
+            function renderActivityCalendar() {
+                const monthNames = [
+                    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+                ];
+                
+                currentMonthActivityEl.textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
+                
+                // Takvim başlıkları (gün isimleri)
+                const dayNames = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+                let calendarHTML = '';
+                
+                // Gün isimlerini ekle
+                dayNames.forEach(day => {
+                    calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+                });
+                
+                // Ayın ilk günü ve son günü
+                const firstDay = new Date(calendarYear, calendarMonth, 1);
+                const lastDay = new Date(calendarYear, calendarMonth + 1, 0);
+                
+                // İlk günden önceki boşlukları ekle
+                let dayOfWeek = firstDay.getDay();
+                // Pazartesi tabanlı takvim için düzeltme (Pazar = 0, Pazartesi = 1, ...)
+                dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                
+                for (let i = 0; i < dayOfWeek; i++) {
+                    calendarHTML += `<div class="calendar-day empty"></div>`;
+                }
+                
+                // Günleri ekle
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayActivities = activities.filter(a => a.date.startsWith(dateStr));
+                    const totalMinutes = dayActivities.reduce((sum, a) => sum + a.minutes, 0);
+                    
+                    const isToday = new Date().getDate() === day && 
+                                   new Date().getMonth() === calendarMonth && 
+                                   new Date().getFullYear() === calendarYear;
+                    
+                    let dayClass = 'calendar-day';
+                    if (dayActivities.length > 0) dayClass += ' has-data';
+                    if (isToday) dayClass += ' today';
+                    
+                    // Aktivite renklerini belirle (çoğunlukta olan renk)
+                    let dominantColor = '#3498db';
+                    if (dayActivities.length > 0) {
+                        const colorCount = {};
+                        dayActivities.forEach(a => {
+                            colorCount[a.color] = (colorCount[a.color] || 0) + 1;
+                        });
+                        
+                        let maxCount = 0;
+                        for (const color in colorCount) {
+                            if (colorCount[color] > maxCount) {
+                                maxCount = colorCount[color];
+                                dominantColor = color;
+                            }
+                        }
+                    }
+                    
+                    calendarHTML += `
+                        <div class="${dayClass}" style="background-color: ${dayActivities.length > 0 ? dominantColor : 'white'}; color: ${dayActivities.length > 0 ? 'white' : 'inherit'}" data-date="${dateStr}">
+                            ${day}
+                            <div class="day-details">
+                                ${dayActivities.length} aktivite<br>
+                                ${totalMinutes} dakika
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                activityCalendar.innerHTML = calendarHTML;
+                
+                // Aktivite günlerine tıklama olayı ekle
+                document.querySelectorAll('#activity-calendar .calendar-day[data-date]').forEach(dayElement => {
+                    dayElement.addEventListener('click', function() {
+                        const date = this.getAttribute('data-date');
+                        showActivityDetails(date);
+                    });
+                });
+            }
+            
+            // İstatistikleri güncelle
+            function updateStats() {
+                // Bugünün tarihini al (sadece tarih kısmı)
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                
+                // Bugünkü aktivite süresi
+                const todayActivities = activities.filter(a => a.date.startsWith(todayStr));
+                const todayActivityMinutes = todayActivities.reduce((sum, a) => sum + a.minutes, 0);
+                todayActivityEl.textContent = todayActivityMinutes;
+                
+                // Tamamlanan rutinler
+                const completedRoutinesCount = routineCompletions[todayStr] ? routineCompletions[todayStr].length : 0;
+                completedRoutinesEl.textContent = completedRoutinesCount;
+                
+                // Bu ayki aktivite süresi
+                const monthStart = new Date(calendarYear, calendarMonth, 1);
+                const monthEnd = new Date(calendarYear, calendarMonth + 1, 0);
+                
+                const monthActivities = activities.filter(a => {
+                    const activityDate = new Date(a.date);
+                    return activityDate >= monthStart && activityDate <= monthEnd;
+                });
+                
+                const monthActivityMinutes = monthActivities.reduce((sum, a) => sum + a.minutes, 0);
+                monthActivityEl.textContent = monthActivityMinutes;
+                
+                // Toplam süre
+                const totalMinutes = activities.reduce((sum, a) => sum + a.minutes, 0);
+                totalTimeEl.textContent = totalMinutes;
+                
+                // Rutin ve aktivite istatistikleri
+                let routineStatsHTML = '';
+                
+                // Kategori bazlı aktivite süreleri
+                const colorStats = {};
+                activities.forEach(activity => {
+                    if (!colorStats[activity.color]) {
+                        colorStats[activity.color] = {
+                            count: 0,
+                            minutes: 0,
+                            color: activity.color
+                        };
+                    }
+                    colorStats[activity.color].count++;
+                    colorStats[activity.color].minutes += activity.minutes;
+                });
+                
+                for (const colorData of Object.values(colorStats)) {
+                    const colorName = getColorName(colorData.color);
+                    routineStatsHTML += `
+                        <div class="routine-stat-item">
+                            <div>${colorName} aktiviteler</div>
+                            <div><strong>${colorData.count}</strong> aktivite, <strong>${colorData.minutes}</strong> dakika</div>
+                        </div>
+                    `;
+                }
+                
+                // Rutin tamamlama istatistikleri
+                const totalDays = Object.keys(routineCompletions).length;
+                const totalCompletions = Object.values(routineCompletions).reduce((sum, arr) => sum + arr.length, 0);
+                const avgCompletions = totalDays > 0 ? (totalCompletions / totalDays).toFixed(1) : 0;
+                
+                routineStatsHTML += `
+                    <div class="routine-stat-item">
+                        <div>Ortalama günlük rutin tamamlama</div>
+                        <div><strong>${avgCompletions}</strong> rutin/gün</div>
+                    </div>
+                    
+                    <div class="routine-stat-item">
+                        <div>Toplam rutin sayısı</div>
+                        <div><strong>${routines.length}</strong> rutin</div>
+                    </div>
+                    
+                    <div class="routine-stat-item">
+                        <div>Toplam aktivite sayısı</div>
+                        <div><strong>${activities.length}</strong> aktivite</div>
+                    </div>
+                `;
+                
+                routineStatsContainer.innerHTML = routineStatsHTML || '<p>Henüz istatistik verisi yok.</p>';
+            }
+            
+            // Renk kodundan isim al
+            function getColorName(colorCode) {
+                const colorMap = {
+                    '#3498db': 'Mavi',
+                    '#e84393': 'Pembe',
+                    '#9b59b6': 'Mor',
+                    '#2c3e50': 'Lacivert',
+                    '#34495e': 'Siyah'
+                };
+                
+                return colorMap[colorCode] || colorCode;
+            }
+            
+            // Uygulamayı başlat
+            renderRoutines();
+            renderRoutineCalendar();
+            renderActivityCalendar();
+            renderActivityList();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
